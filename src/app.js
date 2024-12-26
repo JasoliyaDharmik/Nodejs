@@ -1,44 +1,77 @@
+require('dotenv').config();
 const express = require('express');
-
+const connectDB = require("./config/database");
+const User = require("./models/user");
 const app = express();
-const { authAdmin } = require("./middlewares/auth");
 
-// Order's of route is matters
-// routes also accept the regular expression
+app.use(express.json());
 
-app.use('/admin', authAdmin);
+// signup api
+app.post('/signup', async (req, res) => {
+  try {
+    const user = new User(req.body);
+    await user.save();
+    res.send("User added successfully!");
+  } catch (err) {
+    res.status(400).send("Error: " + err.message);
+  }
+});
 
-app.use('/', (err, req, res, next) => {
-  console.log("sdssfsdfs");
-  if (err) {
+// get user by id
+app.get("/user", async (req, res) => {
+  try {
+    const users = await User.find({ email: req.body.email });
+    if (users.length !== 0) {
+      res.send(users);
+    } else {
+      res.status(400).send("User not found!");
+    }
+  } catch (err) {
     res.status(500).send("Something went wrong!");
   }
-  next();
 });
 
-app.get('/admin/getAllUserData', (req, res,next) => {
-  // throw new Error("not found!");
-  // res.send("All user list data");
-  next();
+// update user
+app.patch("/user", async (req, res) => {
+  try {
+    const { firstName, lastName, password } = req.body;
+    const user = await User.findOneAndUpdate({ email: req.body.email }, { firstName, lastName, password });
+    if (user) {
+      res.send("User updated successfully!");
+    } else {
+      res.send("User not found!");
+    }
+  } catch (err) {
+    res.status(500).send("Something went wrong!");
+  }
 });
 
-app.get('/admin/getAllUserData*', (req, res) => {
-  console.log("sdfsdfjskldj")
-  // throw new Error("not found!");
-  res.send("All user list data with start");
-});
-
-app.get('/admin/deleteUser', (req, res) => {
-  res.send("Delete use successfully");
+// delete user by email
+app.delete("/user", async (req, res) => {
+  try {
+    const deletedUser = await User.deleteOne({ email: req.body.email });
+    if (deletedUser.deletedCount === 0) {
+      res.send("User deleted successfully!");
+    } else {
+      res.status(400).send("User not found!");
+    }
+  } catch (err) {
+    res.status(500).send("Something went wrong!");
+  }
 });
 
 // Error handling
-app.use('/', (err, req, res, next) => {
+app.use('/', (err, req, res) => {
   if (err) {
     res.status(500).send("Something went wrong!");
   }
 });
 
-app.listen(3000, () => {
-  console.log('Server is running on http://localhost:3000');
+connectDB().then(() => {
+  console.log("Database connected successfully!");
+  app.listen(3000, () => {
+    console.log('Server is running on http://localhost:3000');
+  });
+}).catch((err) => {
+  console.log("Database connection is failed!!");
 });
