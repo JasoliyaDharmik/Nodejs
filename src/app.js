@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const bcrypt = require('bcrypt');
-const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 
 const connectDB = require("./config/database");
@@ -51,12 +50,12 @@ app.get("/login", async (req, res) => {
     if (!user) {
       throw new Error("Invalid username or password!");
     }
-    const match = await bcrypt.compare(password, user.password);
+    const match = await user.validatePassword(password);
     if (!match) {
       throw new Error("Invalid username or password!");
     }
-    const token = await jwt.sign({ id: user._id }, 'Test@123', { expiresIn: "7d" });
-    res.cookie("token", token, { maxAge: 10000 });
+    const token = await user.getJWT();
+    res.cookie("token", token, { maxAge: 10 * 3600 * 1000 }); // 10 min
     res.send("User login successfully!");
   } catch (err) {
     res.status(500).send(err.message);
