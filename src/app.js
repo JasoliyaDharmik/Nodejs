@@ -1,29 +1,79 @@
 require('dotenv').config();
 const express = require('express');
+const bcrypt = require('bcrypt');
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+
 const connectDB = require("./config/database");
 const User = require("./models/user");
+const { validationSignUpData } = require("./utils/validation");
+const { userAuth } = require("./middlewares/auth");
+
 const app = express();
-
 app.use(express.json());
+app.use(cookieParser());
 
-// signup api
+// Never trust on req.body
+
+// signup
 app.post('/signup', async (req, res) => {
   try {
+    // validation of data
+    validationSignUpData(req);
+
     const { firstName, lastName, email, password, age, gender, about } = req.body;
-    const isExist = await User.find({ email });
-    if (isExist.length !== 0) {
-      throw new Error("User already exists!");
-    } else {
-      const user = new User({ firstName, lastName, email, password, age, gender, about });
-      await user.save();
-      res.send("User added successfully!");
-    }
+
+    // encrypt the password
+    const hashPassword = await bcrypt.hash(password, 10);
+
+    // create new instance of the user modal
+    const user = new User({
+      firstName,
+      lastName,
+      email,
+      password: hashPassword,
+      age,
+      gender,
+      about
+    });
+    await user.save();
+    res.send("User added successfully!");
   } catch (err) {
     res.status(500).send(err.message);
   }
 });
 
-// get user by id
+// login
+app.get("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new Error("Invalid username or password!");
+    }
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      throw new Error("Invalid username or password!");
+    }
+    const token = await jwt.sign({ id: user._id }, 'Test@123', { expiresIn: "7d" });
+    res.cookie("token", token, { maxAge: 10000 });
+    res.send("User login successfully!");
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+// get profile
+app.get("/profile", userAuth, async (req, res) => {
+  try {
+    const user = req.user;
+    res.send(user);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+// get user
 app.get("/user/:id", async (req, res) => {
   try {
     const userId = req.params.id;
@@ -60,7 +110,7 @@ app.patch("/user/:id", async (req, res) => {
   }
 });
 
-// delete user by email
+// delete user
 app.delete("/user/:id", async (req, res) => {
   try {
     const userId = req.params.id;
