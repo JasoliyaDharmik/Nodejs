@@ -1,7 +1,7 @@
 const validator = require('validator');
 
 const validationSignUpData = (req) => {
-  const { firstName, lastName, email, password, age } = req.body;
+  const { firstName, lastName, email, password } = req.body;
   if (!firstName || !lastName) {
     throw new Error("Name is blank");
   }
@@ -19,4 +19,13 @@ const validationSignUpData = (req) => {
   }
 }
 
-module.exports = { validationSignUpData };
+const validateEditProfileData = (req) => {
+  const allowedEditFields = ["firstName", "lastName", "age", "photoUrl", "about"];
+  const isEditAllowed = Object.keys(req.body).every(field => allowedEditFields.includes(field));
+  return isEditAllowed;
+}
+
+module.exports = {
+  validationSignUpData,
+  validateEditProfileData
+};
