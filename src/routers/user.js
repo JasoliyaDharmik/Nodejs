@@ -22,7 +22,7 @@ userRouter.get("/user/request/received", userAuth, async (req, res) => {
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
-}); 
+});
 
 // get all connections of logged in user
 userRouter.get("/user/connections", userAuth, async (req, res) => {

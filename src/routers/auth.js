@@ -2,9 +2,9 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const authRouter = express.Router();
 
+const { userAuth } = require('../middlewares/auth');
 const User = require("../models/user");
 const { validationSignUpData } = require("../utils/validation");
-const { userAuth } = require('../middlewares/auth');
 
 // Never trust on req.body
 // signup
@@ -77,4 +77,3 @@ authRouter.post("/forgot-password", userAuth, async (req, res) => {
 });
 
 module.exports = authRouter;
-
