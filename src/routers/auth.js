@@ -13,7 +13,7 @@ authRouter.post('/signup', async (req, res) => {
     // validation of data
     validationSignUpData(req);
 
-    const { firstName, lastName, email, password, age, gender, about } = req.body;
+    const { firstName, lastName, email, password, age, photoUrl, gender, about } = req.body;
 
     // encrypt the password
     const hashPassword = await bcrypt.hash(password, 10);
@@ -25,6 +25,7 @@ authRouter.post('/signup', async (req, res) => {
       email,
       password: hashPassword,
       age,
+      photoUrl,
       gender,
       about
     });
@@ -67,7 +68,6 @@ authRouter.post("/forgot-password", userAuth, async (req, res) => {
     const user = req.user;
     const newPassword = req.body.newPassword;
     const newHashPassword = await bcrypt.hash(newPassword, 10);
-    console.log(newHashPassword)
     user.password = newHashPassword;
     user.save();
     res.send("Password update successfully!");
