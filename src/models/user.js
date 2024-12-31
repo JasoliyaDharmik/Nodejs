@@ -6,19 +6,19 @@ const bcrypt = require('bcrypt');
 const userSchema = new mongoose.Schema({
   firstName: {
     type: String,
-    required: true,
-    minLength: [2, "First name length must be 2-50 char allowed"],
-    maxLength: [50, "Last name length must be 2-50 char allowed"],
+    required: [true, "First name is required"],
+    minLength: [2, "First name must be at least 2 characters"],
+    maxLength: [50, "First name must not exceed 50 characters"],
   },
   lastName: {
     type: String,
-    required: true,
-    minLength: [2, "Last name length must be 2-50 char allowed"],
-    maxLength: [50, "Last name length must be 2-50 char allowed"],
+    required: [true, "Last name is required"],
+    minLength: [2, "Last name must be at least 2 characters"],
+    maxLength: [50, "Last name must not exceed 50 characters"],
   },
   email: {
     type: String,
-    required: true,
+    required: [true, "Email is required"],
     lowercase: true,
     trim: true,
     unique: true,
@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: [true, "Password is required"],
     validate: (value) => {
       return validator.isStrongPassword(value)
     }

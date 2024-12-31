@@ -8,9 +8,9 @@ const { validateEditProfileData } = require("../utils/validation");
 profileRouter.get("/profile/view", userAuth, async (req, res) => {
   try {
     const user = req.user;
-    res.send(user);
+    res.send({ data: user });
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).send({ error: err.message });
   }
 });
 
@@ -23,9 +23,9 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
     }
     Object.keys(req.body).forEach(field => user[field] = req.body[field]);
     await user.save();
-    res.send("Profile updated successfully!");
+    res.send({ message: "Profile updated successfully!" });
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).send({ error: err.message });
   }
 });
 

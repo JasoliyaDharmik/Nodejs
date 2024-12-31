@@ -30,9 +30,16 @@ authRouter.post('/signup', async (req, res) => {
       about
     });
     await user.save();
-    res.send("User added successfully!");
+    res.send({ message: "User created successfully!" });
   } catch (err) {
-    res.status(500).send(err.message);
+    if (err.code === 11000) {
+      return res.status(400).send({ error: "Email is already exist!" });
+    }
+    if (err.name === "ValidationError") {
+      const messages = Object.values(err.errors).map((err) => err.message);
+      return res.status(400).send({ errors: messages });
+    }
+    res.status(500).send({ error: "Internal Server Error" });
   }
 });
 
@@ -50,16 +57,16 @@ authRouter.get("/login", async (req, res) => {
     }
     const token = await user.getJWT();
     res.cookie("token", token, { maxAge: 10 * 3600 * 1000 }); // 10 min
-    res.send("User login successfully!");
+    res.send({ message: "User login successfully!" });
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).send({ error: err.message });
   }
 });
 
 // logout
 authRouter.post("/logout", (req, res) => {
   res.cookie("token", null, { expires: new Date(Date.now()) });
-  res.send("User logout successfully!");
+  res.send({ message: "User logout successfully!" });
 });
 
 // forgot password
@@ -70,9 +77,9 @@ authRouter.post("/forgot-password", userAuth, async (req, res) => {
     const newHashPassword = await bcrypt.hash(newPassword, 10);
     user.password = newHashPassword;
     user.save();
-    res.send("Password update successfully!");
+    res.send({ message: "Password update successfully!" });
   } catch (err) {
-    res.status(400).send(err.message);
+    res.status(500).send({ error: err.message });
   }
 });
 
